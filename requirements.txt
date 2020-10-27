@@ -1,0 +1,2 @@
+fhir.resources==5.1.1
+pydicom==2.0.0
