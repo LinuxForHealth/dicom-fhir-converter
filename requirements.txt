@@ -1,2 +1,3 @@
 fhir.resources==5.1.1
 pydicom==2.0.0
+setuptools~=50.3.2
