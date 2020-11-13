@@ -77,7 +77,6 @@ Until such time, all of the a data is included within a single resource.
             "gender": "unknown",
             "identifier": [
                 {
-                    "system": "urn:oid:",
                     "type": {
                         "coding": [
                             {
@@ -92,9 +91,9 @@ Until such time, all of the a data is included within a single resource.
             ],
             "name": [
                 {
-                    "family": "CR",
+                    "family": "LastName",
                     "given": [
-                        "LateralityCheck"
+                        "Mary"
                     ]
                 }
             ],

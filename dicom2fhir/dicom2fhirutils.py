@@ -7,8 +7,7 @@ from fhir.resources import coding
 from fhir.resources import patient
 from fhir.resources import humanname
 from fhir.resources import fhirdate
-
-from pydicom import FileDataset
+from fhir.resources import reference
 
 TERMINOLOGY_CODING_SYS = "http://terminology.hl7.org/CodeSystem/v2-0203"
 TERMINOLOGY_CODING_SYS_CODE_ACCESSION = "ACSN"
@@ -43,15 +42,19 @@ def gen_studyinstanceuid_identifier(id):
 def get_patient_resource_ids(PatientID, IssuerOfPatientID):
     idf = identifier.Identifier()
     idf.use = "usual"
+    idf.value = PatientID
+
     idf.type = codeableconcept.CodeableConcept()
     idf.type.coding = []
-    pid = coding.Coding()
-    pid.system = TERMINOLOGY_CODING_SYS
-    pid.code = TERMINOLOGY_CODING_SYS_CODE_MRN
-    idf.type.coding.append(pid)
+    id_coding = coding.Coding()
+    id_coding.system = TERMINOLOGY_CODING_SYS
+    id_coding.code = TERMINOLOGY_CODING_SYS_CODE_MRN
+    idf.type.coding.append(id_coding)
 
-    idf.system = "urn:oid:" + IssuerOfPatientID
-    idf.value = PatientID
+    if IssuerOfPatientID is not None:
+        idf.assigner = reference.Reference()
+        idf.assigner.display = IssuerOfPatientID
+
     return idf
 
 
@@ -78,7 +81,7 @@ def calc_dob(dicom_dob):
     try:
         dob = datetime.strptime(dicom_dob, '%Y%m%d')
         fhir_dob.date = dob
-    except:
+    except Exception:
         return None
     return fhir_dob
 

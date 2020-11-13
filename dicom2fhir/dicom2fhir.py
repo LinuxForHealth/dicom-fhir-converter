@@ -1,6 +1,6 @@
 import uuid
 import os
-from fhir import resources  as fr
+from fhir import resources as fr
 from pydicom import dcmread
 from pydicom import dataset
 
@@ -32,8 +32,8 @@ def _add_imaging_study_instance(study: fr.imagingstudy.ImagingStudy, series: fr.
             selectedInstance.title = seq[0x0008, 0x0104]
         else:
             selectedInstance.title = '\\'.join(ds.ImageType)
-    except:
-        print("Unable to set instance title")
+    except Exception:
+        pass  # print("Unable to set instance title")
 
     series.instance.append(selectedInstance)
     study.numberOfInstances = study.numberOfInstances + 1
@@ -58,7 +58,7 @@ def _add_imaging_study_series(study: fr.imagingstudy.ImagingStudy, ds: dataset.F
     series.uid = seriesInstanceUID
     try:
         series.description = ds.SeriesDescription
-    except:
+    except Exception:
         pass
 
     series.number = ds.SeriesNumber
@@ -70,23 +70,23 @@ def _add_imaging_study_series(study: fr.imagingstudy.ImagingStudy, ds: dataset.F
     stime = None
     try:
         stime = ds.SeriesTime
-    except:
+    except Exception:
         pass  # print("Series TimeDate is missing")
 
     try:
         sdate = ds.SeriesDate
         series.started = dicom2fhirutils.gen_started_datetime(sdate, stime)
-    except:
+    except Exception:
         pass  # print("Series Date is missing")
 
     try:
         series.bodySite = dicom2fhirutils.gen_coding_text_only(ds.BodyPartExamined)
-    except:
+    except Exception:
         pass  # print ("Body Part Examined missing")
 
     try:
         series.laterality = dicom2fhirutils.gen_coding_text_only(ds.Laterality)
-    except:
+    except Exception:
         pass  # print ("Laterality missing")
 
     # TODO: evaluate if we wonat to have inline "performer.actor" for the I am assuming "technician"
@@ -95,7 +95,6 @@ def _add_imaging_study_series(study: fr.imagingstudy.ImagingStudy, ds: dataset.F
 
     study.series.append(series)
     study.numberOfSeries = study.numberOfSeries + 1
-
     _add_imaging_study_instance(study, series, ds, fp)
     return
 
@@ -106,25 +105,25 @@ def _create_imaging_study(ds, fp, dcmDir) -> fr.imagingstudy.ImagingStudy:
     study.status = "available"
     try:
         study.description = ds.StudyDescription
-    except:
+    except Exception:
         pass  # missing study description
 
     study.identifier = []
     study.identifier.append(dicom2fhirutils.gen_accession_identifier(ds.AccessionNumber))
     study.identifier.append(dicom2fhirutils.gen_studyinstanceuid_identifier(ds.StudyInstanceUID))
 
+    ipid = None
     try:
         ipid = ds.IssuerOfPatientID
-    except:
+    except Exception:
         pass  # print("Issuer of Patient ID is missing")
 
     study.contained = []
     patientReference = fr.fhirreference.FHIRReference()
     patientref = "patient.contained.inline"
     patientReference.reference = "#" + patientref
-    study.contained.append(dicom2fhirutils.inline_patient_resource(patientref, ds.PatientID, ""
-                                                                   , ds.PatientName, ds.PatientSex,
-                                                                   ds.PatientBirthDate))
+    study.contained.append(dicom2fhirutils.inline_patient_resource(patientref, ds.PatientID, ipid, ds.PatientName,
+                                                                   ds.PatientSex, ds.PatientBirthDate))
     study.subject = patientReference
     study.endpoint = []
     endpoint = fr.fhirreference.FHIRReference()
@@ -135,7 +134,7 @@ def _create_imaging_study(ds, fp, dcmDir) -> fr.imagingstudy.ImagingStudy:
     procedures = []
     try:
         procedures = dicom2fhirutils.dcm_coded_concept(ds.ProcedureCodeSequence)
-    except:
+    except Exception:
         pass  # procedure code sequence not found
 
     study.procedureCode = dicom2fhirutils.gen_procedurecode_array(procedures)
@@ -143,13 +142,13 @@ def _create_imaging_study(ds, fp, dcmDir) -> fr.imagingstudy.ImagingStudy:
     studyTime = None
     try:
         studyTime = ds.StudyTime
-    except:
+    except Exception:
         pass  # print("Study Date is missing")
 
     try:
         studyDate = ds.StudyDate
         study.started = dicom2fhirutils.gen_started_datetime(studyDate, studyTime)
-    except:
+    except Exception:
         pass  # print("Study Date is missing")
 
     # TODO: we can add "inline" referrer
@@ -159,12 +158,12 @@ def _create_imaging_study(ds, fp, dcmDir) -> fr.imagingstudy.ImagingStudy:
     reasonStr = None
     try:
         reason = dicom2fhirutils.dcm_coded_concept(ds.ReasonForRequestedProcedureCodeSequence)
-    except:
+    except Exception:
         pass  # print("Reason for Request procedure Code Seq is not available")
 
     try:
         reasonStr = ds.ReasonForTheRequestedProcedure
-    except:
+    except Exception:
         pass  # print ("Reason for Requested procedures not found")
 
     study.reasonCode = dicom2fhirutils.gen_reason(reason, reasonStr)
@@ -176,9 +175,8 @@ def _create_imaging_study(ds, fp, dcmDir) -> fr.imagingstudy.ImagingStudy:
 
 
 def process_dicom_2_fhir(dcmDir: str) -> fr.imagingstudy.ImagingStudy:
-    dcmDict = {}
     files = []
-    #TODO: subdirectory must be traversed
+    # TODO: subdirectory must be traversed
     for r, d, f in os.walk(dcmDir):
         for file in f:
             files.append(os.path.join(r, file))
@@ -197,7 +195,6 @@ def process_dicom_2_fhir(dcmDir: str) -> fr.imagingstudy.ImagingStudy:
                     imagingStudy = _create_imaging_study(ds, fp, dcmDir)
                 else:
                     _add_imaging_study_series(imagingStudy, ds, fp)
-        except:
-            pass #file is not a dicom file
-
+        except Exception:
+            pass  # file is not a dicom file
     return imagingStudy
