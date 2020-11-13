@@ -85,7 +85,7 @@ def _add_imaging_study_series(study: fr.imagingstudy.ImagingStudy, ds: dataset.F
         pass  # print ("Body Part Examined missing")
 
     try:
-        series.bodySite = dicom2fhirutils.gen_coding_text_only(ds.Laterality)
+        series.laterality = dicom2fhirutils.gen_coding_text_only(ds.Laterality)
     except:
         pass  # print ("Laterality missing")
 

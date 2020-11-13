@@ -22,6 +22,8 @@ class testDicom2FHIR(unittest.TestCase):
         series: fr.ImagingSeries
         series = study.series [0]
         self.assertIsNotNone(series, "Missing Series")
+        self.assertEqual(series.bodySite.code, 'CHEST', "CHEST is expected bodys site")
+        self.assertTrue(series.bodySite.userSelected, "Body Site is currently not a coded concept. Text is used so userSelected value must be set to true")
         instance: fr.ImagingInstance
         instance = series.instance[0]
         self.assertIsNotNone(instance, "Missing Instance")

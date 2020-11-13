@@ -1,22 +1,22 @@
 # dicom-fhir-converter
 DICOM FHIR converter is an open source python library that accepts a DICOM directory as an input.
-It processes all ".dcm" files (instances) within that directory. It expects that directory will only contain files for a single study.
-If multiple studies detected, an exception is raised.
+It processes all files (instances) within that directory. It expects that directory will only contain files for a single study.
+If multiple studies detected, an exception is raised. 
+Using the usual convention, if file cannot be read, it will be skipped assuming it is not a dicom file (no error raised).
 
 This library utilizes the following projects:
 - fhir.resources project (https://pypi.org/project/fhir.resources/) - used to create FHIR models
 - pydicom (https://pydicom.github.io/) - used to read dicom instances
 
-
-
+The library does not rely on the terminology service therefore, any coding that requires a look-up were coded with ```"userSelected=True"``` values.
 
 ## Usage
 
 ```
-dicom2fhir.process_dicom_2_fhir("directory")
+dicom2fhir.process_dicom_2_fhir("study directory")
 ```
 
-The dicom file (*.dcm) represents a single instance within DICOM study. A study is a collection of instances grouped by series.
+The dicom file represents a single instance within DICOM study. A study is a collection of instances grouped by series.
 The assumption is that all instances are copied into a single folder prior to calling this function. The flattened structure is then consolidated into a single FHIR Imaging Study resource.
 
 ## Structure 
